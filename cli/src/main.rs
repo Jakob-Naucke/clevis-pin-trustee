@@ -551,6 +551,23 @@ fn decrypt() -> Result<()> {
     Ok(())
 }
 
+fn get_jwk() -> Result<()> {
+    let mut stdin = Vec::new();
+    io::stdin().read_to_end(&mut stdin)?;
+    let input = std::str::from_utf8(&stdin).context("Input is not valid UTF-8")?;
+    let hdr: ClevisHeader =
+        serde_json::from_str(input).context("Error deserializing clevis header")?;
+
+    eprintln!("Get JWK with header: {:?}", hdr);
+    let executor = RealCommandExecutor;
+    let default = NumRetries::Finite(DEFAULT_TRIES);
+    let num_retries = hdr.num_retries.as_ref().unwrap_or(&default);
+    let servers = hdr.servers;
+    let jwk = fetch_and_prepare_jwk(&servers, &hdr.path, hdr.initdata, num_retries, &executor)?;
+    println!("{jwk}");
+    Ok(())
+}
+
 fn try_fetch_from_servers<E: CommandExecutor>(
     servers: &[Server],
     path: &str,
@@ -652,6 +669,8 @@ enum Commands {
     },
     /// Decrypt the input data
     Decrypt,
+    /// Get the JWK directly, taking the clevis header JSON from stdin
+    GetJWK,
 }
 
 fn main() -> Result<()> {
@@ -660,6 +679,7 @@ fn main() -> Result<()> {
     match cli.command {
         Commands::Encrypt { config } => encrypt(&config),
         Commands::Decrypt => decrypt(),
+        Commands::GetJWK => get_jwk(),
     }
 }
 
