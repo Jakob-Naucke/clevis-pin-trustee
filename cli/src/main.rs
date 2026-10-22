@@ -481,7 +481,6 @@ fn encrypt(config: &str) -> Result<()> {
         &executor,
     )?;
 
-    eprintln!("{}", jwk);
     let encrypter = Dir
         .encrypter_from_jwk(&jwk)
         .context("Error creating direct encrypter")?;
