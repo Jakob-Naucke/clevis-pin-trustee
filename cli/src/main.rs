@@ -600,7 +600,7 @@ fn fetch_luks_key<E: CommandExecutor>(
 
                 if attempt < *max_attempts {
                     eprintln!(
-                        "All URLs failed for attempt {}. Retrying in {:?} seconds...",
+                        "All URLs failed for attempt {}. Retrying in {:?}...",
                         attempt, DELAY
                     );
                     thread::sleep(DELAY);
@@ -623,7 +623,7 @@ fn fetch_luks_key<E: CommandExecutor>(
                     return result;
                 }
                 eprintln!(
-                    "All URLs failed for attempt {attempt} with errors {}. Retrying in {:?} seconds...",
+                    "All URLs failed for attempt {attempt} with errors {}. Retrying in {:?}...",
                     result.unwrap_err(),
                     DELAY
                 );
