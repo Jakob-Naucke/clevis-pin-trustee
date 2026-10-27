@@ -245,6 +245,11 @@ impl FileSystem for MockFileSystem {
 #[derive(Debug, Serialize, Deserialize)]
 struct ClevisHeader {
     pin: String,
+    trustee: ClevisConfig,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct ClevisConfig {
     servers: Vec<Server>,
     path: String,
     initdata: Option<String>,
@@ -487,10 +492,12 @@ fn encrypt(config: &str) -> Result<()> {
 
     let private_hdr = ClevisHeader {
         pin: "trustee".to_string(),
-        servers: config.servers.clone(),
-        path: config.path,
-        initdata,
-        num_retries: config.num_retries,
+        trustee: ClevisConfig {
+            servers: config.servers.clone(),
+            path: config.path,
+            initdata,
+            num_retries: config.num_retries,
+        },
     };
 
     let mut hdr = josekit::jwe::JweHeader::new();
@@ -519,9 +526,10 @@ fn decrypt() -> Result<()> {
     let input = std::str::from_utf8(&input).context("Input is not valid UTF-8")?;
 
     let hdr = josekit::jwt::decode_header(input).context("Error decoding header")?;
-    let hdr_clevis = hdr.claim("clevis").context("Error getting clevis claim")?;
-    let hdr_clevis: ClevisHeader =
-        serde_json::from_value(hdr_clevis.clone()).context("Error deserializing clevis header")?;
+    let clevis_claim = hdr.claim("clevis").context("Error getting clevis claim")?;
+    let hdr_clevis = serde_json::from_value::<ClevisHeader>(clevis_claim.clone())
+        .context("Error deserializing clevis header")?
+        .trustee;
 
     eprintln!("Decrypt with header: {:?}", hdr_clevis);
 
